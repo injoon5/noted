@@ -118,57 +118,30 @@ export const update = mutation({
   },
 });
 
-// Delete page and all children recursively
-async function deletePageRecursive(
-  ctx: { db: { delete: (id: Id<"pages">) => Promise<void>; query: (tableName: "pages") => unknown } },
-  pageId: Id<"pages">
-) {
-  // Get all children
-  const children = await (ctx.db.query("pages") as ReturnType<typeof ctx.db.query>)
-    .withIndex("by_parent", (q: { eq: (field: string, val: Id<"pages">) => unknown }) =>
+// Helper to recursively delete children
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function deleteChildren(ctx: any, pageId: Id<"pages">): Promise<void> {
+  const children = await ctx.db
+    .query("pages")
+    .withIndex("by_parent", (q: { eq: (field: string, val: unknown) => unknown }) =>
       q.eq("parentId", pageId)
     )
     .collect();
 
   for (const child of children) {
-    await deletePageRecursive(ctx, child._id);
-  }
-
-  await ctx.db.delete(pageId);
-}
-
-// Remove page and children
-export const remove = mutation({
-  args: { pageId: v.id("pages") },
-  handler: async (ctx, args) => {
-    const children = await ctx.db
-      .query("pages")
-      .withIndex("by_parent", (q) => q.eq("parentId", args.pageId))
-      .collect();
-
-    for (const child of children) {
-      await removeChildren(ctx, child._id);
-      await ctx.db.delete(child._id);
-    }
-
-    await ctx.db.delete(args.pageId);
-  },
-});
-
-async function removeChildren(
-  ctx: Parameters<Parameters<typeof mutation>[0]["handler"]>[0],
-  pageId: Id<"pages">
-) {
-  const children = await ctx.db
-    .query("pages")
-    .withIndex("by_parent", (q) => q.eq("parentId", pageId))
-    .collect();
-
-  for (const child of children) {
-    await removeChildren(ctx, child._id);
+    await deleteChildren(ctx, child._id);
     await ctx.db.delete(child._id);
   }
 }
+
+// Remove page and all children recursively
+export const remove = mutation({
+  args: { pageId: v.id("pages") },
+  handler: async (ctx, args) => {
+    await deleteChildren(ctx, args.pageId);
+    await ctx.db.delete(args.pageId);
+  },
+});
 
 // Full text search
 export const search = query({

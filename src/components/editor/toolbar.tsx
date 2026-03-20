@@ -1,0 +1,148 @@
+"use client"
+
+import { Editor } from "@tiptap/react"
+import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Code,
+  Link,
+  Highlighter,
+  AlignLeft,
+  List,
+  ListOrdered,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
+
+interface ToolbarProps {
+  editor: Editor
+}
+
+interface ToolbarButtonProps {
+  onClick: () => void
+  isActive?: boolean
+  tooltip: string
+  children: React.ReactNode
+  disabled?: boolean
+}
+
+function ToolbarButton({
+  onClick,
+  isActive,
+  tooltip,
+  children,
+  disabled,
+}: ToolbarButtonProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onClick}
+          disabled={disabled}
+          className={cn(
+            "flex h-7 w-7 items-center justify-center rounded text-sm transition-colors",
+            isActive
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            disabled && "opacity-40 cursor-not-allowed"
+          )}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        <p>{tooltip}</p>
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+export function EditorToolbar({ editor }: ToolbarProps) {
+  const setLink = () => {
+    const previousUrl = editor.getAttributes("link").href as string
+    const url = window.prompt("URL:", previousUrl)
+    if (url === null) return
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run()
+      return
+    }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+  }
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="flex items-center gap-0.5 rounded-lg border bg-background px-1.5 py-1 shadow-md">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          isActive={editor.isActive("bold")}
+          tooltip="Bold (⌘B)"
+        >
+          <Bold className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          isActive={editor.isActive("italic")}
+          tooltip="Italic (⌘I)"
+        >
+          <Italic className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          isActive={editor.isActive("strike")}
+          tooltip="Strikethrough"
+        >
+          <Strikethrough className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          isActive={editor.isActive("code")}
+          tooltip="Inline code"
+        >
+          <Code className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <div className="mx-1 h-4 w-px bg-border" />
+
+        <ToolbarButton
+          onClick={setLink}
+          isActive={editor.isActive("link")}
+          tooltip="Add link"
+        >
+          <Link className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          isActive={editor.isActive("highlight")}
+          tooltip="Highlight"
+        >
+          <Highlighter className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <div className="mx-1 h-4 w-px bg-border" />
+
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          isActive={editor.isActive("bulletList")}
+          tooltip="Bullet list"
+        >
+          <List className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          isActive={editor.isActive("orderedList")}
+          tooltip="Numbered list"
+        >
+          <ListOrdered className="h-3.5 w-3.5" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setParagraph().run()}
+          isActive={false}
+          tooltip="Clear formatting"
+        >
+          <AlignLeft className="h-3.5 w-3.5" />
+        </ToolbarButton>
+      </div>
+    </TooltipProvider>
+  )
+}
