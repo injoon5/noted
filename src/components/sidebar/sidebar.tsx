@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useTheme } from "next-themes"
@@ -16,6 +16,21 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable"
 import { cn } from "@/lib/utils"
 import { NavItem } from "./nav-item"
 import { SpaceTree } from "./space-tree"
@@ -36,6 +51,34 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
   const favorites = useQuery(api.pages.getFavorites)
   const todayCount = useQuery(api.tasks.getTodayCount)
   const createSpace = useMutation(api.spaces.create)
+  const reorderSpaces = useMutation(api.spaces.reorder)
+
+  const [localSpaces, setLocalSpaces] = useState(spaces ?? [])
+
+  useEffect(() => {
+    if (spaces) setLocalSpaces(spaces)
+  }, [spaces])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = localSpaces.findIndex((s) => s._id === active.id)
+    const newIndex = localSpaces.findIndex((s) => s._id === over.id)
+    const reordered = arrayMove(localSpaces, oldIndex, newIndex)
+
+    setLocalSpaces(reordered)
+    try {
+      await reorderSpaces({ spaceIds: reordered.map((s) => s._id) })
+    } catch {
+      toast.error("Failed to reorder spaces")
+    }
+  }
 
   // We need a user ID to create spaces. Use a placeholder for now.
   // In a real app, this would come from a session context.
@@ -160,14 +203,25 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
               </div>
             ) : (
               <div className="space-y-0.5">
-                {spaces.map((space) => (
-                  <SpaceTree
-                    key={space._id}
-                    spaceId={space._id}
-                    title={space.title}
-                    icon={space.icon}
-                  />
-                ))}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={localSpaces.map((s) => s._id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {localSpaces.map((space) => (
+                      <SpaceTree
+                        key={space._id}
+                        spaceId={space._id}
+                        title={space.title}
+                        icon={space.icon}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               </div>
             )}
           </div>

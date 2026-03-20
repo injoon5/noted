@@ -15,6 +15,8 @@ import {
   Table,
   Image as ImageIcon,
   Type,
+  AlertCircle,
+  ChevronRight,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -127,6 +129,94 @@ const COMMANDS: SlashCommandItem[] = [
       if (url) {
         editor.chain().focus().setImage({ src: url }).run()
       }
+    },
+  },
+  {
+    title: "Callout",
+    description: "Info callout block",
+    icon: <AlertCircle className="h-4 w-4" />,
+    command: (editor) => {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "callout",
+          attrs: { type: "info" },
+          content: [{ type: "text", text: "Add a note here..." }],
+        })
+        .run()
+    },
+  },
+  {
+    title: "Callout Warning",
+    description: "Warning callout block",
+    icon: <AlertCircle className="h-4 w-4 text-yellow-500" />,
+    command: (editor) => {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "callout",
+          attrs: { type: "warning" },
+          content: [{ type: "text", text: "Add a warning here..." }],
+        })
+        .run()
+    },
+  },
+  {
+    title: "Callout Error",
+    description: "Error callout block",
+    icon: <AlertCircle className="h-4 w-4 text-red-500" />,
+    command: (editor) => {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "callout",
+          attrs: { type: "error" },
+          content: [{ type: "text", text: "Add an error note here..." }],
+        })
+        .run()
+    },
+  },
+  {
+    title: "Callout Success",
+    description: "Success callout block",
+    icon: <AlertCircle className="h-4 w-4 text-green-500" />,
+    command: (editor) => {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "callout",
+          attrs: { type: "success" },
+          content: [{ type: "text", text: "Add a success note here..." }],
+        })
+        .run()
+    },
+  },
+  {
+    title: "Toggle",
+    description: "Collapsible section",
+    icon: <ChevronRight className="h-4 w-4" />,
+    command: (editor) => {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "toggleList",
+          content: [
+            {
+              type: "toggleSummary",
+              content: [{ type: "text", text: "Click to expand" }],
+            },
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "" }],
+            },
+          ],
+        })
+        .run()
     },
   },
 ]

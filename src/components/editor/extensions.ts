@@ -15,6 +15,9 @@ import Color from "@tiptap/extension-color"
 import TextStyle from "@tiptap/extension-text-style"
 import Highlight from "@tiptap/extension-highlight"
 import { common, createLowlight } from "lowlight"
+import { Callout } from "./callout-extension"
+import { ToggleList, ToggleSummary } from "./toggle-extension"
+import { PageLink } from "./page-link-extension"
 
 const lowlight = createLowlight(common)
 
@@ -55,4 +58,8 @@ export const getExtensions = (placeholder = "Start writing, or press '/' for com
   Highlight.configure({
     multicolor: true,
   }),
+  Callout,
+  ToggleList,
+  ToggleSummary,
+  PageLink,
 ]

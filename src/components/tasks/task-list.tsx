@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -35,19 +35,38 @@ export function TaskList({
 }: TaskListProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
   const createTask = useMutation(api.tasks.create)
 
-  const handleAddTask = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTaskTitle.trim()) return
+  const handleAddTask = async (continueAdding = false) => {
+    if (!newTaskTitle.trim()) {
+      if (!continueAdding) setIsAdding(false)
+      return
+    }
 
     try {
       await createTask({ title: newTaskTitle.trim() })
       setNewTaskTitle("")
-      setIsAdding(false)
-      toast.success("Task created")
+      if (continueAdding) {
+        // Stay in adding mode; focus input for the next task
+        setTimeout(() => inputRef.current?.focus(), 0)
+      } else {
+        setIsAdding(false)
+        toast.success("Task created")
+      }
     } catch {
       toast.error("Failed to create task")
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      handleAddTask(true)
+    }
+    if (e.key === "Escape") {
+      setIsAdding(false)
+      setNewTaskTitle("")
     }
   }
 
@@ -64,7 +83,10 @@ export function TaskList({
         </h3>
         {showAddButton && (
           <button
-            onClick={() => setIsAdding(true)}
+            onClick={() => {
+              setIsAdding(true)
+              setTimeout(() => inputRef.current?.focus(), 0)
+            }}
             className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -78,49 +100,53 @@ export function TaskList({
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         )}
 
-        {tasks.map((task) => (
-          <TaskItem key={task._id} task={task} />
-        ))}
-
-        {/* Add task inline */}
+        {/* Add task inline — shown at top of the list */}
         {isAdding && (
-          <form onSubmit={handleAddTask} className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
             <div className="h-5 w-5 shrink-0 rounded-full border-2 border-muted-foreground/40" />
             <input
+              ref={inputRef}
               autoFocus
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               onBlur={() => {
-                if (!newTaskTitle.trim()) setIsAdding(false)
+                // Small delay to allow button clicks to register
+                setTimeout(() => {
+                  if (!newTaskTitle.trim()) setIsAdding(false)
+                }, 150)
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
+              onKeyDown={handleKeyDown}
+              placeholder="Task title… (Enter to add, Esc to cancel)"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleAddTask(false)}
+                disabled={!newTaskTitle.trim()}
+                className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
                   setIsAdding(false)
                   setNewTaskTitle("")
-                }
-              }}
-              placeholder="Task title..."
-              className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-1 ring-ring placeholder:text-muted-foreground"
-            />
-            <button
-              type="submit"
-              disabled={!newTaskTitle.trim()}
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsAdding(false)
-                setNewTaskTitle("")
-              }}
-              className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
-            >
-              Cancel
-            </button>
-          </form>
+                }}
+                className="rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
+
+        {tasks.map((task) => (
+          <TaskItem key={task._id} task={task} />
+        ))}
       </div>
     </div>
   )

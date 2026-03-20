@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { Trash2, ChevronDown, ChevronRight, Calendar, FileText } from "lucide-react"
+import { Trash2, ChevronDown, ChevronRight, Calendar, Link2 } from "lucide-react"
+import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
-import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface Task {
   _id: Id<"tasks">
@@ -25,13 +26,35 @@ interface TaskItemProps {
   task: Task
 }
 
+function formatTaskDate(ms: number): string {
+  const date = new Date(ms)
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(today.getDate() + 1)
+  if (date.toDateString() === today.toDateString()) return "Today"
+  if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow"
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
 export function TaskItem({ task }: TaskItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(task.title)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [showPagePicker, setShowPagePicker] = useState(false)
+  const [pageSearchQuery, setPageSearchQuery] = useState("")
 
   const updateTask = useMutation(api.tasks.update)
   const removeTask = useMutation(api.tasks.remove)
+
+  const pageResults = useQuery(
+    api.pages.search,
+    pageSearchQuery.length > 0 ? { query: pageSearchQuery } : "skip"
+  )
+  const linkedPage = useQuery(
+    api.pages.get,
+    task.linkedPageId ? { pageId: task.linkedPageId } : "skip"
+  )
 
   const isCompleted = task.status === "done"
   const isOverdue =
@@ -66,6 +89,31 @@ export function TaskItem({ task }: TaskItemProps) {
     } catch {
       toast.error("Failed to update task")
     }
+  }
+
+  const handleDateSelect = async (date: Date | undefined) => {
+    try {
+      await updateTask({
+        taskId: task._id,
+        dueDate: date ? date.getTime() : undefined,
+      })
+    } catch {
+      toast.error("Failed to update due date")
+    }
+    setShowDatePicker(false)
+  }
+
+  const handleLinkPage = async (pageId: Id<"pages"> | null) => {
+    try {
+      await updateTask({
+        taskId: task._id,
+        linkedPageId: pageId ?? undefined,
+      })
+    } catch {
+      toast.error("Failed to link page")
+    }
+    setShowPagePicker(false)
+    setPageSearchQuery("")
   }
 
   return (
@@ -133,25 +181,104 @@ export function TaskItem({ task }: TaskItemProps) {
           )}
 
           {/* Meta */}
-          <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-            {task.dueDate && (
-              <span
-                className={cn(
-                  "flex items-center gap-1",
-                  isOverdue && "text-red-500"
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {/* Date picker */}
+            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "flex items-center gap-1 text-xs rounded px-1.5 py-0.5 hover:bg-accent transition-colors",
+                    isOverdue
+                      ? "text-red-500"
+                      : task.dueDate
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/60 hover:text-muted-foreground"
+                  )}
+                >
+                  <Calendar className="h-3 w-3" />
+                  {task.dueDate ? formatTaskDate(task.dueDate) : "Add date"}
+                  {isOverdue && " · Overdue"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-auto" align="start">
+                <DayPicker
+                  mode="single"
+                  selected={task.dueDate ? new Date(task.dueDate) : undefined}
+                  onSelect={handleDateSelect}
+                  className="p-3"
+                />
+                {task.dueDate && (
+                  <div className="border-t p-2">
+                    <button
+                      onClick={() => handleDateSelect(undefined)}
+                      className="w-full rounded px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent text-center"
+                    >
+                      Remove date
+                    </button>
+                  </div>
                 )}
-              >
-                <Calendar className="h-3 w-3" />
-                {formatDate(task.dueDate)}
-                {isOverdue && " · Overdue"}
-              </span>
-            )}
-            {task.linkedPageId && (
-              <span className="flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                Linked page
-              </span>
-            )}
+              </PopoverContent>
+            </Popover>
+
+            {/* Linked page picker */}
+            <Popover
+              open={showPagePicker}
+              onOpenChange={(open) => {
+                setShowPagePicker(open)
+                if (!open) setPageSearchQuery("")
+              }}
+            >
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "flex items-center gap-1 text-xs rounded px-1.5 py-0.5 hover:bg-accent transition-colors",
+                    linkedPage
+                      ? "text-muted-foreground"
+                      : "text-muted-foreground/60 hover:text-muted-foreground"
+                  )}
+                >
+                  <Link2 className="h-3 w-3" />
+                  {linkedPage ? linkedPage.title || "Untitled" : "Link page"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="p-2 w-64" align="start">
+                <input
+                  autoFocus
+                  value={pageSearchQuery}
+                  onChange={(e) => setPageSearchQuery(e.target.value)}
+                  placeholder="Search pages..."
+                  className="w-full rounded border px-2 py-1.5 text-sm outline-none bg-background"
+                />
+                <div className="mt-2 max-h-48 overflow-y-auto space-y-0.5">
+                  {pageResults?.map((page) => (
+                    <button
+                      key={page._id}
+                      onClick={() => handleLinkPage(page._id)}
+                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent text-left"
+                    >
+                      {page.icon && <span>{page.icon}</span>}
+                      <span className="truncate">{page.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                  {!pageResults?.length && pageSearchQuery && (
+                    <p className="text-xs text-muted-foreground p-2">No pages found</p>
+                  )}
+                  {!pageSearchQuery && (
+                    <p className="text-xs text-muted-foreground p-2">Type to search pages</p>
+                  )}
+                </div>
+                {task.linkedPageId && (
+                  <div className="mt-2 border-t pt-2">
+                    <button
+                      onClick={() => handleLinkPage(null)}
+                      className="w-full text-xs text-muted-foreground hover:text-foreground text-center py-1"
+                    >
+                      Remove link
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Description (expanded) */}

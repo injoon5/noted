@@ -195,6 +195,18 @@ export const getFavorites = query({
   },
 });
 
+// Reorder pages
+export const reorder = mutation({
+  args: {
+    pageIds: v.array(v.id("pages")),
+  },
+  handler: async (ctx, args) => {
+    for (let i = 0; i < args.pageIds.length; i++) {
+      await ctx.db.patch(args.pageIds[i], { order: i, updatedAt: Date.now() })
+    }
+  },
+})
+
 // Move page to different space/parent
 export const move = mutation({
   args: {

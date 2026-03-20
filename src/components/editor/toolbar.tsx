@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Editor } from "@tiptap/react"
 import {
   Bold,
@@ -11,9 +12,12 @@ import {
   AlignLeft,
   List,
   ListOrdered,
+  Copy,
+  ClipboardCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
+import { toast } from "sonner"
 
 interface ToolbarProps {
   editor: Editor
@@ -59,6 +63,8 @@ function ToolbarButton({
 }
 
 export function EditorToolbar({ editor }: ToolbarProps) {
+  const [copied, setCopied] = useState(false)
+
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href as string
     const url = window.prompt("URL:", previousUrl)
@@ -68,6 +74,17 @@ export function EditorToolbar({ editor }: ToolbarProps) {
       return
     }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+  }
+
+  const handleCopyMarkdown = () => {
+    const text = editor.getText()
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+      toast.success("Copied to clipboard!")
+    }).catch(() => {
+      toast.error("Failed to copy to clipboard")
+    })
   }
 
   return (
@@ -141,6 +158,19 @@ export function EditorToolbar({ editor }: ToolbarProps) {
           tooltip="Clear formatting"
         >
           <AlignLeft className="h-3.5 w-3.5" />
+        </ToolbarButton>
+
+        <div className="mx-1 h-4 w-px bg-border" />
+
+        <ToolbarButton
+          onClick={handleCopyMarkdown}
+          tooltip={copied ? "Copied!" : "Copy as text"}
+        >
+          {copied ? (
+            <ClipboardCheck className="h-3.5 w-3.5 text-green-500" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
         </ToolbarButton>
       </div>
     </TooltipProvider>

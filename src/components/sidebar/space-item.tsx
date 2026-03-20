@@ -13,8 +13,10 @@ import {
   Star,
   Trash2,
   Edit2,
-  Share2,
+  GripVertical,
 } from "lucide-react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -60,6 +62,23 @@ export function SpaceItem({
   const removePage = useMutation(api.pages.remove)
   const removeSpace = useMutation(api.spaces.remove)
   const updateSpace = useMutation(api.spaces.update)
+
+  const isDraggable = type === "space" || type === "page"
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: !isDraggable })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
 
   const isActive = pathname === href
   const hasChildren = !!children
@@ -125,7 +144,7 @@ export function SpaceItem({
   }
 
   return (
-    <div>
+    <div ref={setNodeRef} style={style}>
       <div
         className={cn(
           "group flex items-center gap-1 rounded-md pr-1 transition-colors",
@@ -135,6 +154,18 @@ export function SpaceItem({
         )}
         style={{ paddingLeft: `${depth * 12 + 4}px` }}
       >
+        {/* Drag handle (spaces and pages) */}
+        {isDraggable && (
+          <button
+            {...attributes}
+            {...listeners}
+            className="drag-handle mr-0.5 flex h-5 w-4 cursor-grab items-center justify-center rounded text-muted-foreground opacity-0 group-hover:opacity-100 active:cursor-grabbing"
+            tabIndex={-1}
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+        )}
+
         {/* Expand chevron */}
         <button
           onClick={(e) => {
