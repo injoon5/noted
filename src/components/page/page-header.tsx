@@ -244,12 +244,16 @@ export function PageHeader({
             {parentPages.map((p) => (
               <span key={p._id} className="flex items-center gap-1">
                 <span>/</span>
-                <Link
-                  href={`/${page.spaceId ?? ""}/${p._id}`}
-                  className="hover:text-foreground transition-colors"
-                >
-                  {p.title || "Untitled"}
-                </Link>
+                {page.spaceId ? (
+                  <Link
+                    href={`/${page.spaceId}/${p._id}`}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {p.title || "Untitled"}
+                  </Link>
+                ) : (
+                  <span>{p.title || "Untitled"}</span>
+                )}
               </span>
             ))}
           </div>

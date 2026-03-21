@@ -87,7 +87,8 @@ export function SpaceItem({
     e.preventDefault()
     e.stopPropagation()
     try {
-      const targetSpaceId = type === "space" ? (id as Id<"spaces">) : spaceId!
+      const targetSpaceId = type === "space" ? (id as Id<"spaces">) : spaceId
+      if (!targetSpaceId) return
       const parentId = type === "page" ? (id as Id<"pages">) : undefined
       await createPage({
         spaceId: targetSpaceId,

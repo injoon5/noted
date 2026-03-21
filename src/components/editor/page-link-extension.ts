@@ -29,7 +29,7 @@ export const PageLink = Node.create({
       "a",
       mergeAttributes(HTMLAttributes, {
         "data-page-link": "",
-        href: `/${node.attrs.pageId as string}`,
+        href: node.attrs.pageId ? `/${node.attrs.pageId as string}` : "#",
         class:
           "page-link inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm bg-accent hover:bg-accent/80 text-foreground no-underline font-medium",
       }),
