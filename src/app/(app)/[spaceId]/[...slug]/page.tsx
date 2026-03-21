@@ -40,7 +40,7 @@ export default function PageView({ params }: PageViewProps) {
       setContent(page.content)
       hasLoadedRef.current = true
     }
-  }, [page?._id])
+  }, [page?._id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset the loaded flag when navigating to a different page
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function PageView({ params }: PageViewProps) {
       pageId,
       content: debouncedContent,
     }).catch(console.error)
-  }, [debouncedContent])
+  }, [debouncedContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-save debounced title
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function PageView({ params }: PageViewProps) {
       pageId,
       title: debouncedTitle,
     }).catch(console.error)
-  }, [debouncedTitle])
+  }, [debouncedTitle]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent)

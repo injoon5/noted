@@ -31,7 +31,6 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable"
-import { cn } from "@/lib/utils"
 import { NavItem } from "./nav-item"
 import { SpaceTree } from "./space-tree"
 import { ScrollArea } from "@/components/ui/scroll-area"

@@ -4,7 +4,6 @@ import { useCallback, useRef, useState } from "react"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { useDebounce } from "use-debounce"
 
 type SaveStatus = "saved" | "saving" | "unsaved"
 
@@ -26,9 +25,6 @@ export function usePageEditor({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved")
   const updatePage = useMutation(api.pages.update)
   const pendingUpdate = useRef<NodeJS.Timeout | null>(null)
-
-  const [debouncedContent] = useDebounce(content, debounceMs)
-  const [debouncedTitle] = useDebounce(title, debounceMs)
 
   const save = useCallback(
     async (newContent?: string, newTitle?: string) => {
