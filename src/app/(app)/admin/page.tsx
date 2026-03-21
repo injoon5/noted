@@ -17,7 +17,7 @@ export default function AdminPage() {
   const handleRegenerate = async () => {
     if (!confirm("Regenerate invite key? The old key will stop working immediately.")) return
     try {
-      const newKey = await regenerateKey()
+      const newKey = await regenerateKey({})
       toast.success(`New invite key: ${newKey}`, { duration: 10000 })
     } catch {
       toast.error("Failed to regenerate invite key")
@@ -55,8 +55,8 @@ export default function AdminPage() {
           Recent Activity
         </h2>
         <div className="space-y-2">
-          {recentActivity?.map((item) => (
-            <div key={item.timestamp} className="flex items-center justify-between rounded-lg border bg-card px-4 py-3">
+          {recentActivity?.map((item, i) => (
+            <div key={`${item.timestamp}-${i}`} className="flex items-center justify-between rounded-lg border bg-card px-4 py-3">
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground">{item.icon}</span>
                 <span className="text-sm">{item.description}</span>
