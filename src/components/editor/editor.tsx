@@ -49,6 +49,13 @@ function PageSearchMenu({
 
   const menuRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [prevQuery, setPrevQuery] = useState(query)
+
+  // Reset selection index when query changes (during render, no useEffect needed)
+  if (prevQuery !== query) {
+    setPrevQuery(query)
+    setSelectedIndex(0)
+  }
 
   const insertPageLink = useCallback(
     (page: PageResult) => {
@@ -71,10 +78,6 @@ function PageSearchMenu({
     },
     [editor, triggerPos, onClose]
   )
-
-  useEffect(() => {
-    setSelectedIndex(0)
-  }, [query])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -265,7 +268,7 @@ export function Editor({
           })
           setPageQuery("")
           // triggerPos is position of the first "[", which is from - 1
-          setPageLinkTriggerPos(from - 1)
+          setPageLinkTriggerPos(() => from - 1)
           setShowPageSearch(true)
         }
       } else if (showSlashMenu) {

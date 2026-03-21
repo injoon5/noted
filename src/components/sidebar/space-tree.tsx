@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -32,12 +32,13 @@ function PageTree({ spaceId, parentId, depth = 1 }: PageTreeProps) {
     parentId ? api.pages.listByParent : api.pages.list,
     parentId ? { parentId } : { spaceId }
   )
-  const [localPages, setLocalPages] = useState(pagesQuery ?? [])
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null)
   const reorderPages = useMutation(api.pages.reorder)
 
-  useEffect(() => {
-    if (pagesQuery) setLocalPages(pagesQuery)
-  }, [pagesQuery])
+  const pages = pagesQuery ?? []
+  const displayPages = dragOrder
+    ? dragOrder.flatMap((id) => pages.filter((p) => p._id === id))
+    : pages
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -47,14 +48,18 @@ function PageTree({ spaceId, parentId, depth = 1 }: PageTreeProps) {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const oldIndex = localPages.findIndex((p) => p._id === active.id)
-    const newIndex = localPages.findIndex((p) => p._id === over.id)
-    const reordered = arrayMove(localPages, oldIndex, newIndex)
-    setLocalPages(reordered)
-    await reorderPages({ pageIds: reordered.map((p) => p._id) })
+    const oldIndex = displayPages.findIndex((p) => p._id === active.id)
+    const newIndex = displayPages.findIndex((p) => p._id === over.id)
+    const reordered = arrayMove(displayPages, oldIndex, newIndex)
+    setDragOrder(reordered.map((p) => p._id))
+    try {
+      await reorderPages({ pageIds: reordered.map((p) => p._id) })
+    } finally {
+      setDragOrder(null)
+    }
   }
 
-  if (!localPages.length) return null
+  if (!displayPages.length) return null
 
   return (
     <DndContext
@@ -63,10 +68,10 @@ function PageTree({ spaceId, parentId, depth = 1 }: PageTreeProps) {
       onDragEnd={handleDragEnd}
     >
       <SortableContext
-        items={localPages.map((p) => p._id)}
+        items={displayPages.map((p) => p._id)}
         strategy={verticalListSortingStrategy}
       >
-        {localPages.map((page) => (
+        {displayPages.map((page) => (
           <SpaceItem
             key={page._id}
             id={page._id}

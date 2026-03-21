@@ -55,7 +55,7 @@ export function SpaceItem({
   const pathname = usePathname()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [isRenaming, setIsRenaming] = useState(false)
-  const [newTitle, setNewTitle] = useState(title)
+  const [newTitle, setNewTitle] = useState("")
 
   const createPage = useMutation(api.pages.create)
   const updatePage = useMutation(api.pages.update)
@@ -225,6 +225,7 @@ export function SpaceItem({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.preventDefault()
+                  setNewTitle(title)
                   setIsRenaming(true)
                 }}
               >

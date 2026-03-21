@@ -90,8 +90,8 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+              {["sk-a","sk-b","sk-c","sk-d","sk-e","sk-f"].map((k) => (
+                <div key={k} className="h-16 animate-pulse rounded-lg bg-muted" />
               ))}
             </div>
           )}

@@ -235,7 +235,14 @@ export function SlashCommandMenu({
   position,
 }: SlashCommandMenuProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [prevQuery, setPrevQuery] = useState(query)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Reset selection index when query changes (during render, no useEffect needed)
+  if (prevQuery !== query) {
+    setPrevQuery(query)
+    setSelectedIndex(0)
+  }
 
   const filteredCommands = COMMANDS.filter(
     (cmd) =>
@@ -257,10 +264,6 @@ export function SlashCommandMenu({
     },
     [editor, query, onClose]
   )
-
-  useEffect(() => {
-    setSelectedIndex(0)
-  }, [query])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

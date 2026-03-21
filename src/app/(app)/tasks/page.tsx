@@ -92,8 +92,8 @@ export default function TasksPage() {
 
       {isLoading ? (
         <div className="space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
+          {["sk-a", "sk-b", "sk-c", "sk-d"].map((k) => (
+            <Skeleton key={k} className="h-14 w-full" />
           ))}
         </div>
       ) : (

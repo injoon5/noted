@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useTheme } from "next-themes"
@@ -53,11 +53,12 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
   const createSpace = useMutation(api.spaces.create)
   const reorderSpaces = useMutation(api.spaces.reorder)
 
-  const [localSpaces, setLocalSpaces] = useState(spaces ?? [])
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null)
 
-  useEffect(() => {
-    if (spaces) setLocalSpaces(spaces)
-  }, [spaces])
+  const spacesList = spaces ?? []
+  const localSpaces = dragOrder
+    ? dragOrder.flatMap((id) => spacesList.filter((s) => s._id === id))
+    : spacesList
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -72,11 +73,13 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
     const newIndex = localSpaces.findIndex((s) => s._id === over.id)
     const reordered = arrayMove(localSpaces, oldIndex, newIndex)
 
-    setLocalSpaces(reordered)
+    setDragOrder(reordered.map((s) => s._id))
     try {
       await reorderSpaces({ spaceIds: reordered.map((s) => s._id) })
     } catch {
       toast.error("Failed to reorder spaces")
+    } finally {
+      setDragOrder(null)
     }
   }
 
@@ -184,9 +187,9 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
 
             {spaces === undefined ? (
               <div className="space-y-1 px-2">
-                {[...Array(3)].map((_, i) => (
+                {["sk-a", "sk-b", "sk-c"].map((k) => (
                   <div
-                    key={i}
+                    key={k}
                     className="h-7 animate-pulse rounded-md bg-sidebar-accent"
                   />
                 ))}

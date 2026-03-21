@@ -94,8 +94,8 @@ export default function SpacePage({ params }: SpacePageProps) {
 
       {pages === undefined ? (
         <div className="space-y-2">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
+          {["sk-a", "sk-b", "sk-c"].map((k) => (
+            <Skeleton key={k} className="h-16 w-full" />
           ))}
         </div>
       ) : pages.length === 0 ? (

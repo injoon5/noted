@@ -34,6 +34,8 @@ interface PageHeaderProps {
   editable?: boolean
 }
 
+const EMPTY_PARENT_PAGES: ParentPage[] = []
+
 const COMMON_EMOJIS = [
   "📄", "📝", "📚", "💡", "🎯", "🔥", "⭐", "✅", "🎨", "🚀",
   "💻", "🌍", "🏠", "💼", "🧪", "📊", "🎵", "🌱", "💰", "🔑",
@@ -124,7 +126,7 @@ function CoverPicker({ onSelect, onClose }: CoverPickerProps) {
 export function PageHeader({
   page,
   spaceName,
-  parentPages = [],
+  parentPages = EMPTY_PARENT_PAGES,
   wordCount,
   onUpdate,
   editable = true,
@@ -157,6 +159,7 @@ export function PageHeader({
             src={page.coverImage}
             alt="Cover"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           {editable && (

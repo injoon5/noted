@@ -56,7 +56,7 @@ export function MobileSidebar({ onSearchOpen }: MobileSidebarProps) {
           "transition-transform duration-300 ease-drawer",
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
-        style={{ willChange: "transform" }}
+        style={open ? { willChange: "transform" } : undefined}
       >
         <div className="relative h-full">
           <button
