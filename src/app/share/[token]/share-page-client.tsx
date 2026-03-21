@@ -25,10 +25,8 @@ export function SharePageClient({ page }: SharePageClientProps) {
         </div>
 
         <PageHeader
-          title={page.title}
-          icon={page.icon}
-          coverImage={page.coverImage}
-          updatedAt={page.updatedAt}
+          page={{ _id: "", title: page.title, icon: page.icon, coverImage: page.coverImage, updatedAt: page.updatedAt }}
+          onUpdate={() => {}}
           editable={false}
         />
 

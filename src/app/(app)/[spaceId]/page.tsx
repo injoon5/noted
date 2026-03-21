@@ -3,8 +3,7 @@
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { use, useState, useCallback } from "react"
-import { useDebounce } from "use-debounce"
+import { use } from "react"
 import { Editor } from "@/components/editor/editor"
 import { PageHeader } from "@/components/page/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -25,15 +24,6 @@ export default function SpacePage({ params }: SpacePageProps) {
     spaceId: spaceId as Id<"spaces">,
   })
   const createPage = useMutation(api.pages.create)
-  const updateSpace = useMutation(api.spaces.update)
-
-  const [spaceTitle, setSpaceTitle] = useState("")
-  const [debouncedTitle] = useDebounce(spaceTitle, 800)
-
-  // Sync title from space
-  useState(() => {
-    if (space) setSpaceTitle(space.title)
-  })
 
   const handleCreatePage = async () => {
     try {

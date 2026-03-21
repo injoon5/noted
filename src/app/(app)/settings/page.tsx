@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useTheme } from "next-themes"
-import { nanoid } from "nanoid"
 import { Moon, Sun, Monitor, Users, Key, BarChart3, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -17,9 +16,8 @@ export default function SettingsPage() {
   const [newInviteKey, setNewInviteKey] = useState("")
 
   const handleRegenerateKey = async () => {
-    const key = nanoid(24)
     try {
-      await regenerateInviteKey({ newKey: key })
+      const key = await regenerateInviteKey({})
       setNewInviteKey(key)
       toast.success("Invite key regenerated")
     } catch {
@@ -70,12 +68,12 @@ export default function SettingsPage() {
           {stats ? (
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: "Spaces", value: stats.spaces },
-                { label: "Pages", value: stats.pages },
-                { label: "Tasks", value: stats.tasks },
-                { label: "Files", value: stats.files },
-                { label: "Users", value: stats.users },
-                { label: "Public pages", value: stats.publicPages },
+                { label: "Spaces", value: stats.spaceCount },
+                { label: "Pages", value: stats.pageCount },
+                { label: "Tasks", value: stats.taskCount },
+                { label: "Public pages", value: stats.publicPageCount },
+                { label: "Users", value: stats.userCount },
+                { label: "File storage", value: `${(stats.fileSize / 1024).toFixed(0)} KB` },
               ].map(({ label, value }) => (
                 <div
                   key={label}

@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { use, useState, useEffect, useRef } from "react"
+import { use, useState, useEffect, useRef, useCallback } from "react"
 import { useDebounce } from "use-debounce"
 import { Editor } from "@/components/editor/editor"
 import { PageHeader } from "@/components/page/page-header"
@@ -33,23 +33,18 @@ export default function PageView({ params }: PageViewProps) {
   const [debouncedTitle] = useDebounce(title, 800)
   const hasLoadedRef = useRef(false)
 
-  // Load page data
+  // Load page data when the page first arrives or page ID changes
   useEffect(() => {
     if (page && !hasLoadedRef.current) {
-      hasLoadedRef.current = false
       setTitle(page.title)
       setContent(page.content)
       hasLoadedRef.current = true
     }
-  }, [page?._id]) // only run when page ID changes
+  }, [page?._id])
 
-  // Reset on page change
+  // Reset the loaded flag when navigating to a different page
   useEffect(() => {
     hasLoadedRef.current = false
-    if (page) {
-      setTitle(page.title)
-      setContent(page.content)
-    }
   }, [pageId])
 
   // Auto-save debounced content
@@ -82,13 +77,13 @@ export default function PageView({ params }: PageViewProps) {
     setWordCount(words)
   }
 
-  const handleIconChange = async (icon: string) => {
-    await updatePage({ pageId, icon: icon || undefined })
-  }
-
-  const handleCoverImageChange = async (url: string | undefined) => {
-    await updatePage({ pageId, coverImage: url })
-  }
+  const handleUpdate = useCallback(
+    async (updates: { title?: string; icon?: string | null; coverImage?: string | null; isPublic?: boolean }) => {
+      if (updates.title !== undefined) setTitle(updates.title)
+      await updatePage({ pageId, ...updates })
+    },
+    [pageId, updatePage]
+  )
 
   if (page === undefined) {
     return (
@@ -132,14 +127,9 @@ export default function PageView({ params }: PageViewProps) {
 
       {/* Page header */}
       <PageHeader
-        title={title}
-        icon={page.icon}
-        coverImage={page.coverImage}
-        updatedAt={page.updatedAt}
+        page={{ _id: pageId, title, icon: page.icon, coverImage: page.coverImage, updatedAt: page.updatedAt, spaceId, isPublic: page.isPublic }}
         wordCount={wordCount}
-        onTitleChange={setTitle}
-        onIconChange={handleIconChange}
-        onCoverImageChange={handleCoverImageChange}
+        onUpdate={handleUpdate}
         editable
       />
 
