@@ -1,12 +1,16 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// List all spaces ordered by order
+// List all spaces ordered by order (scoped to the current user)
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
     const spaces = await ctx.db.query("spaces").collect();
-    return spaces.sort((a, b) => a.order - b.order);
+    return spaces
+      .filter((s) => s.ownerId === identity.subject)
+      .sort((a, b) => a.order - b.order);
   },
 });
 
@@ -52,6 +56,11 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const space = await ctx.db.get(args.spaceId);
+    if (!space || space.ownerId !== identity.subject) throw new Error("Forbidden");
+
     const { spaceId, ...updates } = args;
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
@@ -64,6 +73,11 @@ export const update = mutation({
 export const remove = mutation({
   args: { spaceId: v.id("spaces") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const space = await ctx.db.get(args.spaceId);
+    if (!space || space.ownerId !== identity.subject) throw new Error("Forbidden");
+
     // Delete all pages in the space
     const pages = await ctx.db
       .query("pages")
@@ -84,7 +98,11 @@ export const reorder = mutation({
     spaceIds: v.array(v.id("spaces")),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     for (let i = 0; i < args.spaceIds.length; i++) {
+      const space = await ctx.db.get(args.spaceIds[i]);
+      if (!space || space.ownerId !== identity.subject) throw new Error("Forbidden");
       await ctx.db.patch(args.spaceIds[i], { order: i });
     }
   },

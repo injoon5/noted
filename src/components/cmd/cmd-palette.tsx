@@ -70,11 +70,15 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
           title: "Untitled",
         }).then((pageId) => {
           router.push(`/${firstSpace._id}/${pageId}`)
+        }).catch(() => {
+          toast.error("Failed to create page")
         })
       } else if (value === "new-task") {
         createTask({ title: "New task" }).then(() => {
           router.push("/tasks")
           toast.success("Task created")
+        }).catch(() => {
+          toast.error("Failed to create task")
         })
       } else if (value.startsWith("space:")) {
         const spaceId = value.replace("space:", "")

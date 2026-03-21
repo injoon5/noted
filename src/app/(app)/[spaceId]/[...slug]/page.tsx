@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
+import { toast } from "sonner"
 
 interface PageViewProps {
   params: Promise<{ spaceId: string; slug: string[] }>
@@ -55,7 +56,9 @@ export default function PageView({ params }: PageViewProps) {
     updatePage({
       pageId,
       content: debouncedContent,
-    }).catch(console.error)
+    }).catch(() => {
+      toast.error("Failed to save — check your connection")
+    })
   }, [debouncedContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-save debounced title
@@ -66,7 +69,9 @@ export default function PageView({ params }: PageViewProps) {
     updatePage({
       pageId,
       title: debouncedTitle,
-    }).catch(console.error)
+    }).catch(() => {
+      toast.error("Failed to save title — check your connection")
+    })
   }, [debouncedTitle]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleContentChange = (newContent: string) => {

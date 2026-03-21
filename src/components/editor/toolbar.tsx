@@ -73,6 +73,11 @@ export function EditorToolbar({ editor }: ToolbarProps) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run()
       return
     }
+    // Block javascript: and other non-http(s) schemes to prevent XSS
+    if (!/^https?:\/\//i.test(url)) {
+      toast.error("Only http:// and https:// URLs are allowed")
+      return
+    }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
   }
 
