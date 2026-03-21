@@ -151,7 +151,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
           {/* Favorites */}
           {favorites && favorites.length > 0 && (
             <div className="pt-3">
-              <div className="mb-1 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mb-1 px-2.5 text-xs font-medium text-muted-foreground/70">
                 Favorites
               </div>
               {favorites.map((page) => (
@@ -170,7 +170,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
           {/* Spaces */}
           <div className="pt-3">
             <div className="mb-1 flex items-center justify-between px-2.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground/70">
                 Spaces
               </span>
               <button

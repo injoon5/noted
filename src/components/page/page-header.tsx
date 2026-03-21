@@ -152,7 +152,7 @@ export function PageHeader({
     <div className="w-full">
       {/* Cover image */}
       {page.coverImage ? (
-        <div className="relative group mb-6 -mx-8 h-48 overflow-hidden">
+        <div className="relative group mb-6 -mx-8 h-32 overflow-hidden">
           <Image
             src={page.coverImage}
             alt="Cover"
@@ -258,7 +258,7 @@ export function PageHeader({
           onChange={handleTitleChange}
           readOnly={!editable}
           className={cn(
-            "w-full text-4xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/40 mb-2",
+            "w-full text-3xl font-semibold bg-transparent outline-none placeholder:text-muted-foreground/30 mb-2",
             editable && "cursor-text"
           )}
           placeholder="Untitled"
@@ -266,7 +266,7 @@ export function PageHeader({
 
         {/* Meta info */}
         {(page.updatedAt !== undefined || wordCount !== undefined || page.isPublic) && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-8 flex-wrap">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4 flex-wrap">
             {page.updatedAt !== undefined && (
               <span>Edited {formatRelativeTime(page.updatedAt)}</span>
             )}

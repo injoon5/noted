@@ -73,7 +73,7 @@ export function TaskList({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+        <h3 className="text-sm font-medium text-muted-foreground">
           {title}
           {tasks.length > 0 && (
             <span className="ml-2 text-xs font-normal normal-case">

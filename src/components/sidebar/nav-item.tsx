@@ -21,18 +21,21 @@ export function NavItem({ href, icon, label, badge, onClick }: NavItemProps) {
       href={href}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
+        "flex items-center gap-2.5 rounded-md py-1.5 text-sm transition-colors border-l-2",
         isActive
-          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-          : "text-sidebar-foreground hover:bg-sidebar-accent/60"
+          ? "border-[hsl(var(--accent-orange))] bg-sidebar-accent/80 text-sidebar-accent-foreground font-medium pl-[calc(0.625rem-2px)] pr-2.5"
+          : "border-transparent text-sidebar-foreground hover:bg-sidebar-accent/50 px-2.5"
       )}
     >
-      <span className="flex h-4 w-4 shrink-0 items-center justify-center text-muted-foreground">
+      <span className={cn(
+        "flex h-4 w-4 shrink-0 items-center justify-center",
+        isActive ? "text-[hsl(var(--accent-orange))]" : "text-muted-foreground"
+      )}>
         {icon}
       </span>
       <span className="flex-1 truncate">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[hsl(var(--accent-orange))] px-1 text-[10px] font-medium text-white">
           {badge > 99 ? "99+" : badge}
         </span>
       )}

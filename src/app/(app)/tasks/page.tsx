@@ -128,7 +128,7 @@ export default function TasksPage() {
           {/* Completed */}
           {completedTasks.length > 0 && (
             <details className="group">
-              <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted-foreground">
                 <span className="group-open:hidden">▶</span>
                 <span className="hidden group-open:inline">▼</span>
                 Completed ({completedTasks.length})

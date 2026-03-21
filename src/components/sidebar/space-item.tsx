@@ -147,12 +147,12 @@ export function SpaceItem({
     <div ref={setNodeRef} style={style}>
       <div
         className={cn(
-          "group flex items-center gap-1 rounded-md pr-1 transition-colors",
+          "group flex items-center gap-1 rounded-md pr-1 transition-colors border-l-2",
           isActive
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-            : "hover:bg-sidebar-accent/60"
+            ? "border-[hsl(var(--accent-orange))] bg-sidebar-accent/80 text-sidebar-accent-foreground"
+            : "border-transparent hover:bg-sidebar-accent/50"
         )}
-        style={{ paddingLeft: `${depth * 12 + 4}px` }}
+        style={{ paddingLeft: `${depth * 12 + (isActive ? 2 : 4)}px` }}
       >
         {/* Drag handle (spaces and pages) */}
         {isDraggable && (
@@ -203,7 +203,7 @@ export function SpaceItem({
         </Link>
 
         {/* Hover actions */}
-        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="flex shrink-0 items-center gap-0.5 opacity-20 transition-opacity group-hover:opacity-100">
           <button
             onClick={handleAddPage}
             className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"

@@ -45,9 +45,9 @@ function ToolbarButton({
           onClick={onClick}
           disabled={disabled}
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded text-sm transition-colors",
+            "flex h-7 w-7 items-center justify-center rounded-md text-sm transition-colors",
             isActive
-              ? "bg-accent text-accent-foreground"
+              ? "bg-[hsl(var(--accent-orange))] text-white"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
             disabled && "opacity-40 cursor-not-allowed"
           )}
@@ -89,7 +89,7 @@ export function EditorToolbar({ editor }: ToolbarProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex items-center gap-0.5 rounded-lg border bg-background px-1.5 py-1 shadow-md">
+      <div className="flex items-center gap-1 rounded-full border bg-background/95 backdrop-blur-sm px-2 py-1.5 shadow-lg shadow-black/10">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive("bold")}

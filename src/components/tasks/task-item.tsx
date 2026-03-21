@@ -130,8 +130,8 @@ export function TaskItem({ task }: TaskItemProps) {
           className={cn(
             "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
             isCompleted
-              ? "border-green-500 bg-green-500 text-white"
-              : "border-muted-foreground/40 hover:border-primary"
+              ? "border-[hsl(var(--accent-orange))] bg-[hsl(var(--accent-orange))] text-white"
+              : "border-muted-foreground/40 hover:border-[hsl(var(--accent-orange))]"
           )}
         >
           {isCompleted && (
@@ -290,7 +290,7 @@ export function TaskItem({ task }: TaskItemProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="flex shrink-0 items-center gap-1 opacity-20 transition-opacity group-hover:opacity-80">
           {task.description && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
