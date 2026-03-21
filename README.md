@@ -1,31 +1,62 @@
 # Noted
 
-A personal knowledge base. Clean, fast, yours.
+A self-hosted personal knowledge base. Clean, fast, yours.
+
+---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15 (App Router) |
-| Database & Backend | Convex (real-time, serverless) |
-| Editor | Tiptap (ProseMirror-based rich text) |
-| Auth | Custom JWT via `jose` (cookie-based sessions) |
-| Styling | Tailwind CSS v4 |
-| Drag & Drop | dnd-kit |
-| UI Components | Radix UI primitives + Sonner toasts |
-| Themes | next-themes (light / dark / system) |
-| Offline | IndexedDB via `idb` |
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Next.js (App Router) | 16 |
+| Database & Backend | Convex (real-time, serverless) | 1.21 |
+| Rich Text Editor | Tiptap (ProseMirror) | 2.11 |
+| Auth | Custom JWT via `jose` + httpOnly cookies | 5.9 |
+| Styling | Tailwind CSS | 4 |
+| Drag & Drop | dnd-kit | 6/8 |
+| UI Primitives | Radix UI | latest |
+| Toasts | Sonner | 2 |
+| Themes | next-themes | 0.4 |
+| Offline Cache | IndexedDB via `idb` | 8 |
+| Command Palette | cmdk | 1 |
 
 ---
 
 ## Features
 
 - **Spaces** — top-level containers for organizing pages
-- **Pages** — nested rich-text documents with cover images, icons, and public sharing
-- **Tasks** — lightweight task tracker with due dates, statuses, and drag-to-reorder
-- **Command palette** — `⌘K` / `Ctrl+K` search and navigation
-- **OG images** — dynamic Open Graph images for shared pages
-- **Invite-key auth** — self-hosted, name-based login; no email/password required
+- **Pages** — nested rich-text documents with cover images, icons, breadcrumbs, and public share links
+- **Tasks** — task board with due dates, statuses (`todo` / `in progress` / `done`), and drag-to-reorder
+- **Full-text search** — Convex search index across page titles and content
+- **Command palette** — `⌘K` / `Ctrl+K` for navigation, search, and quick actions
+- **Favorites** — pin pages for quick sidebar access
+- **OG images** — dynamic Open Graph images for shared pages (edge-rendered)
+- **Offline support** — pages cached in IndexedDB
+- **Admin dashboard** — stats, recent activity, invite key management
+- **Theme** — light / dark / system
+
+---
+
+## Architecture Overview
+
+```
+Browser ──── Next.js 16 (App Router) ──── Convex (serverless backend)
+               │                              │
+               │  JWT cookie (httpOnly)        │  Real-time queries
+               │  middleware.ts guards         │  + mutations
+               │  all /app routes              │
+               │                              │
+               ├── /app/*      (authenticated) │
+               ├── /auth       (public)        │
+               ├── /share/*    (public)        │
+               └── /api/og     (edge, public)  │
+```
+
+**Data flow:**
+- The Next.js frontend talks directly to Convex via the `convex/react` client (WebSocket).
+- Server actions (`src/app/actions/auth.ts`) handle session cookie creation/deletion.
+- Middleware validates the JWT on every request before the page renders.
+- Convex functions are the only place that reads/writes the database.
 
 ---
 
@@ -33,48 +64,90 @@ A personal knowledge base. Clean, fast, yours.
 
 ```
 noted/
-├── convex/               # Convex backend (queries, mutations, schema)
-│   ├── schema.ts         # Database schema
-│   ├── auth.ts           # Bootstrap, register, sign-in mutations
-│   ├── spaces.ts         # Space CRUD
-│   ├── pages.ts          # Page CRUD + full-text search
-│   ├── tasks.ts          # Task CRUD
-│   ├── files.ts          # File metadata
-│   └── admin.ts          # Stats, invite key management
+├── convex/                   # Convex backend — deployed separately
+│   ├── schema.ts             # All table definitions and indexes
+│   ├── auth.ts               # bootstrap / register / signIn mutations
+│   ├── spaces.ts             # Space CRUD + reorder
+│   ├── pages.ts              # Page CRUD + full-text search + favorites
+│   ├── tasks.ts              # Task CRUD + reorder + date queries
+│   ├── files.ts              # File metadata CRUD
+│   └── admin.ts              # Stats, recent activity, invite key
+│
 ├── src/
 │   ├── app/
-│   │   ├── (app)/        # Authenticated app shell
-│   │   │   ├── page.tsx          # Home (redirects to first space)
-│   │   │   ├── [spaceId]/        # Space overview + page editor
-│   │   │   ├── tasks/            # Task board
-│   │   │   ├── settings/         # User settings
-│   │   │   └── admin/            # Admin dashboard
-│   │   ├── (auth)/auth/  # Login / register / setup
-│   │   ├── share/[token] # Public page viewer
+│   │   ├── layout.tsx               # Root layout (Convex + Theme providers)
+│   │   ├── globals.css
+│   │   ├── (app)/                   # Route group — requires auth
+│   │   │   ├── layout.tsx           # App shell: sidebar + cmd palette
+│   │   │   ├── page.tsx             # Home — auto-redirects to first space
+│   │   │   ├── [spaceId]/
+│   │   │   │   ├── page.tsx         # Space overview + page list
+│   │   │   │   └── [...slug]/
+│   │   │   │       └── page.tsx     # Page editor (Tiptap + auto-save)
+│   │   │   ├── tasks/page.tsx       # Task board
+│   │   │   ├── settings/page.tsx    # Theme, stats, users, invite key
+│   │   │   └── admin/page.tsx       # Admin dashboard
+│   │   ├── (auth)/auth/page.tsx     # Setup / sign-in / join
+│   │   ├── share/[token]/
+│   │   │   ├── page.tsx             # Server component — fetches shared page
+│   │   │   └── share-page-client.tsx
 │   │   └── api/
-│   │       ├── og/       # Dynamic OG image generation (edge)
-│   │       └── upload/   # Upload proxy (placeholder for R2)
+│   │       ├── og/route.tsx         # Edge: OG image generation
+│   │       └── upload/route.ts      # Upload auth proxy (placeholder)
+│   │
 │   ├── components/
-│   │   ├── editor/       # Tiptap editor + custom extensions
-│   │   ├── sidebar/      # Sidebar, space tree, drag-and-drop
-│   │   ├── tasks/        # Task list and item components
-│   │   ├── cmd/          # Command palette
-│   │   ├── page/         # Page header (icon, cover, title)
-│   │   ├── providers/    # Convex and theme providers
-│   │   └── ui/           # Reusable UI primitives
-│   ├── hooks/            # useCmdK, useOffline, usePWA, useEditor
+│   │   ├── editor/                  # Tiptap editor + all custom extensions
+│   │   │   ├── editor.tsx
+│   │   │   ├── extensions.ts        # Extension bundle
+│   │   │   ├── toolbar.tsx          # Formatting toolbar
+│   │   │   ├── slash-command.tsx    # /command menu
+│   │   │   ├── callout-extension.ts
+│   │   │   ├── toggle-extension.ts
+│   │   │   └── page-link-extension.ts
+│   │   ├── sidebar/                 # Sidebar + space tree + DnD
+│   │   ├── page/page-header.tsx     # Icon picker, cover image, title
+│   │   ├── tasks/                   # Task list + individual task items
+│   │   ├── cmd/cmd-palette.tsx      # ⌘K command palette
+│   │   ├── providers/               # ConvexClientProvider, ThemeProvider
+│   │   └── ui/                      # Radix-based primitives + offline banner
+│   │
+│   ├── hooks/
+│   │   ├── useCmdK.ts              # ⌘K open/close state
+│   │   ├── useOffline.ts           # Network status detection
+│   │   ├── usePWA.ts               # PWA install prompt
+│   │   └── useEditor.ts            # Page editor state + auto-save
+│   │
 │   └── lib/
-│       ├── session.ts    # JWT session helpers
-│       └── utils.ts      # cn(), formatRelativeTime()
-├── middleware.ts         # JWT auth guard for all app routes
-└── next.config.ts        # Next.js config (remote image patterns)
+│       ├── session.ts              # createSession / getSession / clearSession
+│       └── utils.ts                # cn(), formatRelativeTime()
+│
+├── middleware.ts                   # JWT guard — protects all app routes
+├── next.config.ts                  # Remote image patterns
+├── eslint.config.mjs
+└── .env.local.example
 ```
+
+---
+
+## Database Schema (Convex)
+
+| Table | Key Fields |
+|---|---|
+| `users` | `name`, `role` (`admin` \| `member`), `createdAt` |
+| `spaces` | `title`, `icon`, `order`, `ownerId`, `isPublic`, `shareToken` |
+| `pages` | `spaceId`, `parentId`, `title`, `content`, `icon`, `coverImage`, `order`, `isPublic`, `shareToken`, `isFavorite` |
+| `tasks` | `title`, `description`, `status`, `dueDate`, `linkedPageId`, `order` |
+| `files` | `storageId`, `url`, `name`, `size`, `mimeType`, `linkedPageId` |
+| `settings` | `key`, `value` — stores `INVITE_KEY`, `SETUP_KEY` |
+| `offlinePages` | `pageId`, `userId`, `cachedAt` |
+
+**Indexes:** `pages` — `by_space`, `by_parent`, `by_share_token`, `search_title`, `search_content` · `tasks` — `by_due_date`, `by_status` · `settings` — `by_key`
 
 ---
 
 ## Environment Variables
 
-Copy `.env.local.example` to `.env.local` and fill in every value:
+Copy the example file and fill in all values before running:
 
 ```bash
 cp .env.local.example .env.local
@@ -82,13 +155,11 @@ cp .env.local.example .env.local
 
 | Variable | Required | Description |
 |---|---|---|
-| `NEXT_PUBLIC_CONVEX_URL` | **Yes** | Convex deployment URL (from Convex dashboard) |
-| `CONVEX_DEPLOYMENT` | **Yes** | Convex deployment name (used by Convex CLI) |
-| `JWT_SECRET` | **Yes in prod** | Random secret for signing session cookies — must be set in production or the server will crash on startup |
-| `SETUP_KEY` | First run | Key you choose during the initial setup wizard (typed into the browser UI) |
+| `NEXT_PUBLIC_CONVEX_URL` | **Yes** | Your Convex deployment URL — starts with `https://…convex.cloud` |
+| `CONVEX_DEPLOYMENT` | **Yes** | Convex deployment slug, e.g. `dev:my-project-123` |
+| `JWT_SECRET` | **Yes in production** | Secret for signing session cookies. Missing in production causes a startup crash. |
 
-> **`JWT_SECRET`**: generate a strong random value, e.g. `openssl rand -hex 32`.
-> The server throws on startup if `JWT_SECRET` is missing in production.
+> Generate a strong secret: `openssl rand -hex 32`
 
 ---
 
@@ -96,105 +167,160 @@ cp .env.local.example .env.local
 
 ### Prerequisites
 
-- Node.js 18+
-- A free [Convex](https://convex.dev) account
+- **Node.js** 18 or later
+- A free [Convex account](https://convex.dev) — no credit card needed
 
-### Steps
+### 1. Install dependencies
 
 ```bash
-# 1. Clone and install dependencies
 git clone <repo-url>
 cd noted
 npm install
+```
 
-# 2. Set up Convex
+### 2. Start Convex (in its own terminal)
+
+```bash
 npx convex dev
-# This prompts you to log in, create a project, and writes
-# CONVEX_DEPLOYMENT and NEXT_PUBLIC_CONVEX_URL to .env.local automatically.
+```
 
-# 3. Add remaining env vars to .env.local
-echo 'JWT_SECRET=dev-only-not-for-production' >> .env.local
+On first run this will:
+1. Prompt you to log in to Convex (browser opens)
+2. Create a new project or select an existing one
+3. Automatically write `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` to `.env.local`
+4. Watch `convex/` for changes and push them live
 
-# 4. Start Next.js
+Keep this terminal running while developing.
+
+### 3. Set remaining env vars
+
+```bash
+# .env.local (JWT_SECRET can be anything locally)
+echo 'JWT_SECRET=local-dev-secret' >> .env.local
+```
+
+### 4. Start Next.js (in a second terminal)
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). On first visit you will be shown the **Setup** screen — create the admin account using any setup key you choose.
+Open [http://localhost:3000](http://localhost:3000).
 
----
+### First-time setup
 
-## First-Time Setup (Admin Bootstrap)
+On first visit, the app detects no users exist and shows the **Setup** screen:
 
-1. Visit `/auth` — you'll see the setup form since no users exist.
-2. Enter your name and invent a **setup key** (any string you like). This is a one-time step; the key is stored in the database.
-3. After setup, go to **Settings → Invite key → Regenerate** to create an invite key that other users can use to register.
+1. Enter your name and choose any **setup key** — this is a one-time password you invent yourself. It gets stored in the database and secures the setup endpoint.
+2. You're logged in as admin.
+3. Go to **Settings → Invite key → Regenerate** to generate a code other users can use to register.
 
 ---
 
 ## Deploying to Vercel
 
-### 1. Deploy Convex backend
+### Step 1 — Deploy the Convex backend
 
 ```bash
 npx convex deploy
 ```
 
-This pushes your schema and functions to your Convex production deployment and prints the production URL.
+This compiles and pushes all functions and schema to your Convex **production** deployment. Note the production URL printed at the end.
 
-### 2. Create a Vercel project
+### Step 2 — Push your code to GitHub
+
+Vercel deploys from Git. Push to your repo:
 
 ```bash
-npm i -g vercel
-vercel
+git push origin main
 ```
 
-Or connect your GitHub repo via the [Vercel dashboard](https://vercel.com/new).
+### Step 3 — Create a Vercel project
 
-### 3. Set environment variables in Vercel
+Option A — Vercel CLI:
+```bash
+npm install -g vercel
+vercel          # follow the prompts
+```
 
-In your Vercel project → **Settings → Environment Variables**, add:
+Option B — Vercel dashboard:
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Import your GitHub repository
+3. Framework preset: **Next.js** (auto-detected)
+
+### Step 4 — Set environment variables in Vercel
+
+In your Vercel project → **Settings** → **Environment Variables**, add:
 
 | Key | Value |
 |---|---|
-| `NEXT_PUBLIC_CONVEX_URL` | Your Convex production URL (from `npx convex deploy` output) |
-| `CONVEX_DEPLOYMENT` | Your Convex deployment name |
-| `JWT_SECRET` | A long random secret (`openssl rand -hex 32`) |
+| `NEXT_PUBLIC_CONVEX_URL` | Convex production URL from Step 1 |
+| `CONVEX_DEPLOYMENT` | Convex production deployment slug |
+| `JWT_SECRET` | Strong random secret — `openssl rand -hex 32` |
 
-> Do **not** set `SETUP_KEY` as an env var — it is only used in the browser during first-time setup.
+> Set all three variables for **Production**, **Preview**, and **Development** environments.
 
-### 4. Deploy
+### Step 5 — Deploy
 
 ```bash
 vercel --prod
 ```
 
-Or push to your connected Git branch.
+Or just merge a PR — Vercel deploys automatically on push.
 
-### 5. First-time setup on production
+### Step 6 — First-time setup on production
 
-Visit your Vercel URL → `/auth`, complete the setup wizard, then generate an invite key in Settings.
+Visit your live URL → `/auth`, complete the setup wizard, then generate an invite key in **Settings**.
 
 ---
 
-## Auth Model
+## Auth Flow
 
-Noted uses a simple name-based auth system (no passwords, no email):
+Noted uses a lightweight name-based auth (no email/password by design):
 
-- **Bootstrap** — first user creates the admin account (one-time only, requires a setup key).
-- **Sign in** — users sign in by name alone.
-- **Join** — new users register using an invite key generated by the admin.
-- **Session** — a JWT cookie (`noted-session`, 30-day expiry, `httpOnly`) is set on the server.
-- **Middleware** — every route except `/auth`, `/share/*`, and `/api/*` requires a valid JWT.
+```
+Sign in:   enter name → Convex looks up user → server sets JWT cookie
+Register:  enter name + invite key → Convex validates → creates user → sets JWT cookie
+Bootstrap: enter name + setup key → only works when 0 users exist → creates admin → sets JWT cookie
+```
+
+| Property | Detail |
+|---|---|
+| Cookie name | `noted-session` |
+| Expiry | 30 days |
+| Algorithm | HS256 |
+| Flags | `httpOnly`, `secure` (prod), `sameSite: lax` |
+| Middleware | Validates JWT on every request to `/(app)/*` |
+| Public routes | `/auth`, `/share/*`, `/api/*` — no token required |
 
 ---
 
 ## Scripts
 
-| Command | Description |
+| Command | What it does |
 |---|---|
-| `npm run dev` | Start Next.js dev server |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npx convex dev` | Start Convex local dev (watches for schema/function changes) |
-| `npx convex deploy` | Deploy Convex to production |
+| `npm run dev` | Start Next.js development server on port 3000 |
+| `npm run build` | Production build (also type-checks) |
+| `npm run start` | Start production server (run build first) |
+| `npm run lint` | ESLint across `src/` and `convex/` |
+| `npx convex dev` | Start Convex dev server + file watcher |
+| `npx convex deploy` | Deploy Convex schema and functions to production |
+
+---
+
+## Troubleshooting
+
+**`NEXT_PUBLIC_CONVEX_URL` is not defined**
+Run `npx convex dev` first — it writes this to `.env.local` automatically.
+
+**Server crashes with "JWT_SECRET environment variable is required in production"**
+Add `JWT_SECRET` to your Vercel environment variables (see Step 4 above).
+
+**Convex functions not updating**
+Make sure `npx convex dev` is running in a separate terminal. Changes to `convex/` are not picked up by `npm run dev` alone.
+
+**Can't sign up — "Invalid invite key"**
+No invite key has been generated yet. Sign in as admin → **Settings** → **Regenerate invite key**, then share the key with new users.
+
+**Page content not saving**
+Auto-save fires 800 ms after you stop typing. Check the browser console for Convex errors — the most common cause is a stale `NEXT_PUBLIC_CONVEX_URL`.
