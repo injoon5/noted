@@ -44,7 +44,7 @@ function PageSearchMenu({
 }: PageSearchMenuProps) {
   const pages = useQuery(
     api.pages.search,
-    query.length >= 0 ? { query: query || " " } : "skip"
+    query.length > 0 ? { query } : "skip"
   ) as PageResult[] | undefined
 
   const menuRef = useRef<HTMLDivElement>(null)

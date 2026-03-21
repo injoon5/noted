@@ -65,7 +65,15 @@ export default function SettingsPage() {
             <BarChart3 className="h-4 w-4" />
             Overview
           </h2>
-          {stats ? (
+          {stats === undefined ? (
+            <div className="grid grid-cols-3 gap-4">
+              {["sk-a","sk-b","sk-c","sk-d","sk-e","sk-f"].map((k) => (
+                <div key={k} className="h-16 animate-pulse rounded-lg bg-muted" />
+              ))}
+            </div>
+          ) : stats === null ? (
+            <p className="text-sm text-muted-foreground">Admin access required to view stats.</p>
+          ) : (
             <div className="grid grid-cols-3 gap-4">
               {[
                 { label: "Spaces", value: stats.spaceCount },
@@ -86,12 +94,6 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-4">
-              {["sk-a","sk-b","sk-c","sk-d","sk-e","sk-f"].map((k) => (
-                <div key={k} className="h-16 animate-pulse rounded-lg bg-muted" />
-              ))}
-            </div>
           )}
         </section>
 
@@ -102,18 +104,18 @@ export default function SettingsPage() {
             Users
           </h2>
           <div className="space-y-2">
-            {users?.map((user) => (
+            {Array.isArray(users) && users.map((user) => (
               <div
                 key={user._id}
                 className="flex items-center gap-3 rounded-lg border p-3"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                  {user.name[0]?.toUpperCase()}
+                  {user.name?.[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{user.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {user.role}
+                    {user.role ?? "member"}
                   </p>
                 </div>
               </div>

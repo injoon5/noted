@@ -50,6 +50,7 @@ function PageTree({ spaceId, parentId, depth = 1 }: PageTreeProps) {
     if (!over || active.id === over.id) return
     const oldIndex = displayPages.findIndex((p) => p._id === active.id)
     const newIndex = displayPages.findIndex((p) => p._id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
     const reordered = arrayMove(displayPages, oldIndex, newIndex)
     setDragOrder(reordered.map((p) => p._id))
     try {

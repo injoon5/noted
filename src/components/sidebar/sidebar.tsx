@@ -241,7 +241,11 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
           <NavItem href="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" />
           <button
             onClick={async () => {
-              await authClient.signOut();
+              try {
+                await authClient.signOut();
+              } catch {
+                // sign-out failed — clear local state and redirect anyway
+              }
               router.push("/auth");
             }}
             className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"

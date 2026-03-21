@@ -33,10 +33,12 @@ export const getUserCount = query({
   },
 });
 
-// Public query: list all Better Auth users
+// List all Better Auth users — requires authentication
 export const listUsers = query({
   args: {},
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
     return await ctx.db.query("user").collect();
   },
 });
