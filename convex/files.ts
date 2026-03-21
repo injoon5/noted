@@ -12,6 +12,8 @@ export const saveFile = mutation({
     linkedPageId: v.optional(v.id("pages")),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     // getMetadata reads from Convex tables populated by syncMetadata
     const metadata = await r2.getMetadata(ctx, args.r2Key)
     const url = metadata?.url ?? ""
@@ -59,6 +61,8 @@ export const listByPage = query({
 export const remove = mutation({
   args: { fileId: v.id("files") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     const file = await ctx.db.get(args.fileId)
     if (file) {
       await r2.deleteObject(ctx, file.storageId)

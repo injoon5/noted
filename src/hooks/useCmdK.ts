@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 
 export function useCmdK() {
   const [isOpen, setIsOpen] = useState(false)
+  const isOpenRef = useRef(isOpen)
+  isOpenRef.current = isOpen
 
   const open = useCallback(() => setIsOpen(true), [])
   const close = useCallback(() => setIsOpen(false), [])
@@ -15,14 +17,14 @@ export function useCmdK() {
         e.preventDefault()
         toggle()
       }
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape" && isOpenRef.current) {
         close()
       }
     }
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [toggle, close, isOpen])
+  }, [toggle, close])
 
   return { isOpen, open, close, toggle }
 }

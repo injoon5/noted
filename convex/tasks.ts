@@ -89,6 +89,8 @@ export const create = mutation({
     linkedPageId: v.optional(v.id("pages")),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     const now = Date.now();
     const existing = await ctx.db.query("tasks").collect();
     const maxOrder = existing.reduce((max, t) => Math.max(max, t.order), -1);
@@ -118,6 +120,8 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     const { taskId, ...updates } = args;
     const filtered: Record<string, unknown> = {};
 
@@ -136,6 +140,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     await ctx.db.delete(args.taskId);
   },
 });
@@ -146,6 +152,8 @@ export const reorder = mutation({
     taskIds: v.array(v.id("tasks")),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
     for (let i = 0; i < args.taskIds.length; i++) {
       await ctx.db.patch(args.taskIds[i], { order: i, updatedAt: Date.now() });
     }

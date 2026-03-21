@@ -126,7 +126,7 @@ const COMMANDS: SlashCommandItem[] = [
     icon: <ImageIcon className="h-4 w-4" />,
     command: (editor) => {
       const url = window.prompt("Enter image URL:")
-      if (url) {
+      if (url && /^https?:\/\//i.test(url)) {
         editor.chain().focus().setImage({ src: url }).run()
       }
     },

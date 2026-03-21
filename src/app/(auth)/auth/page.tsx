@@ -45,7 +45,7 @@ export default function AuthPage() {
         password: setupPassword,
       });
       if (result.error) {
-        toast.error(result.error.message ?? "Setup failed");
+        toast.error(result.error?.message ?? "Setup failed");
         setLoading(false);
         return;
       }
@@ -66,7 +66,7 @@ export default function AuthPage() {
         password: signInPassword,
       });
       if (result.error) {
-        toast.error(result.error.message ?? "Sign in failed");
+        toast.error(result.error?.message ?? "Sign in failed");
         setLoading(false);
         return;
       }
@@ -97,7 +97,7 @@ export default function AuthPage() {
         inviteCode: inviteKey.trim(),
       });
       if (result.error) {
-        toast.error(result.error.message ?? "Registration failed");
+        toast.error(result.error?.message ?? "Registration failed");
         setLoading(false);
         return;
       }
