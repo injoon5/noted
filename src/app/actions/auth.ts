@@ -1,14 +1,9 @@
-"use server"
+"use server";
 
-import { createSession, clearSession } from "@/lib/session"
-import { redirect } from "next/navigation"
-
-export async function loginAction(userId: string) {
-  await createSession(userId)
-  redirect("/")
-}
+import { redirect } from "next/navigation";
 
 export async function logoutAction() {
-  await clearSession()
-  redirect("/auth")
+  // Better Auth handles sign-out via the client-side authClient.signOut()
+  // This server action just redirects after client-side sign-out
+  redirect("/auth");
 }

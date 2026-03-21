@@ -1,16 +1,11 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import { jwtVerify } from "jose"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "@convex-dev/better-auth/utils";
 
-const jwtSecretValue = process.env.JWT_SECRET ?? (
-  process.env.NODE_ENV === "production"
-    ? (() => { throw new Error("JWT_SECRET environment variable is required in production") })()
-    : "dev-secret-change-in-prod"
-)
-const JWT_SECRET = new TextEncoder().encode(jwtSecretValue)
+const CONVEX_SITE_URL = process.env.NEXT_PUBLIC_CONVEX_SITE_URL ?? "";
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl;
 
   // Public paths that don't require auth
   if (
@@ -18,25 +13,26 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/share") ||
     pathname.startsWith("/api")
   ) {
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
-  const token = request.cookies.get("noted-session")?.value
-
-  if (!token) {
-    return NextResponse.redirect(new URL("/auth", request.url))
-  }
+  // Check Better Auth session token via Convex site URL
+  const mutableHeaders = new Headers(request.headers);
+  mutableHeaders.delete("content-length");
+  mutableHeaders.delete("transfer-encoding");
+  mutableHeaders.set("accept-encoding", "identity");
 
   try {
-    await jwtVerify(token, JWT_SECRET)
-    return NextResponse.next()
+    const { token } = await getToken(CONVEX_SITE_URL, mutableHeaders);
+    if (!token) {
+      return NextResponse.redirect(new URL("/auth", request.url));
+    }
+    return NextResponse.next();
   } catch {
-    const response = NextResponse.redirect(new URL("/auth", request.url))
-    response.cookies.delete("noted-session")
-    return response
+    return NextResponse.redirect(new URL("/auth", request.url));
   }
 }
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
-}
+};

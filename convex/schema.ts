@@ -1,18 +1,16 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { tables as betterAuthTables } from "./betterAuth/schema";
 
 export default defineSchema({
-  users: defineTable({
-    role: v.union(v.literal("admin"), v.literal("member")),
-    name: v.string(),
-    createdAt: v.number(),
-  }),
+  // Better Auth tables (user, session, account, verification)
+  ...betterAuthTables,
 
   spaces: defineTable({
     title: v.string(),
     icon: v.optional(v.string()),
     order: v.number(),
-    ownerId: v.id("users"),
+    ownerId: v.string(),
     isPublic: v.boolean(),
     shareToken: v.optional(v.string()),
   }),
@@ -76,7 +74,7 @@ export default defineSchema({
 
   offlinePages: defineTable({
     pageId: v.id("pages"),
-    userId: v.id("users"),
+    userId: v.string(),
     cachedAt: v.number(),
   }).index("by_user", ["userId"]),
 });

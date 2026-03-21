@@ -23,7 +23,7 @@ export const create = mutation({
   args: {
     title: v.string(),
     icon: v.optional(v.string()),
-    ownerId: v.id("users"),
+    ownerId: v.string(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db.query("spaces").collect();

@@ -9,7 +9,7 @@ export const getStats = query({
       ctx.db.query("pages").collect(),
       ctx.db.query("tasks").collect(),
       ctx.db.query("files").collect(),
-      ctx.db.query("users").collect(),
+      ctx.db.query("user").collect(),
     ]);
 
     const fileSize = files.reduce((sum, f) => sum + f.size, 0);

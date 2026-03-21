@@ -36,7 +36,8 @@ import { SpaceTree } from "./space-tree"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { logoutAction } from "@/app/actions/auth"
+import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
 
 interface SidebarProps {
   onSearchOpen?: () => void
@@ -44,6 +45,7 @@ interface SidebarProps {
 
 export function Sidebar({ onSearchOpen }: SidebarProps) {
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
 
   const spaces = useQuery(api.spaces.list)
@@ -246,7 +248,10 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
           </button>
           <NavItem href="/settings" icon={<Settings className="h-4 w-4" />} label="Settings" />
           <button
-            onClick={() => logoutAction()}
+            onClick={async () => {
+              await authClient.signOut();
+              router.push("/auth");
+            }}
             className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
             title="Sign out"
           >
