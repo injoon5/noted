@@ -211,7 +211,7 @@ export function PageHeader({
   }
 
   const handleIconSelect = (emoji: string) => {
-    onUpdate({ icon: emoji || undefined })
+    onUpdate({ icon: emoji || null })
   }
 
   const handleCoverSelect = (url: string) => {
@@ -219,7 +219,7 @@ export function PageHeader({
   }
 
   const handleRemoveCover = () => {
-    onUpdate({ coverImage: undefined })
+    onUpdate({ coverImage: null })
   }
 
   return (

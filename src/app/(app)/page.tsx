@@ -12,9 +12,7 @@ import { toast } from "sonner"
 export default function HomePage() {
   const router = useRouter()
   const spaces = useQuery(api.spaces.list)
-  const users = useQuery(api.auth.listUsers)
   const createSpace = useMutation(api.spaces.create)
-  const currentUser = users?.[0]
 
   // Redirect to first space automatically
   useEffect(() => {
@@ -24,11 +22,9 @@ export default function HomePage() {
   }, [spaces, router])
 
   const handleCreateSpace = async () => {
-    if (!currentUser) return
     try {
       const spaceId = await createSpace({
         title: "My Space",
-        ownerId: currentUser._id,
         icon: "📝",
       })
       router.push(`/${spaceId}`)

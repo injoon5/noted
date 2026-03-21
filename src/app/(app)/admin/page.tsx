@@ -6,13 +6,29 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { LayoutGrid, FileText, CheckSquare, HardDrive, Globe, Users, Activity, AlertTriangle, RefreshCw, Download } from "lucide-react"
+import { LayoutGrid, FileText, CheckSquare, HardDrive, Globe, Users, Activity, AlertTriangle, RefreshCw, Download, ShieldOff } from "lucide-react"
 import { formatRelativeTime } from "@/lib/utils"
 
 export default function AdminPage() {
+  const currentUser = useQuery(api.auth.getCurrentUser)
   const stats = useQuery(api.admin.getStats)
   const recentActivity = useQuery(api.admin.getRecentActivity)
   const regenerateKey = useMutation(api.admin.regenerateInviteKey)
+
+  // Loading
+  if (currentUser === undefined) {
+    return <div className="flex h-full items-center justify-center"><div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+  }
+
+  // Access control — only admins may view this page
+  if (!currentUser || currentUser.role !== "admin") {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <ShieldOff className="h-10 w-10" />
+        <p className="text-sm">You don&apos;t have permission to view this page.</p>
+      </div>
+    )
+  }
 
   const handleRegenerate = async () => {
     if (!confirm("Regenerate invite key? The old key will stop working immediately.")) return

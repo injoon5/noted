@@ -34,8 +34,6 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
     search.length > 1 ? { query: search } : "skip"
   )
   const spaces = useQuery(api.spaces.list)
-  const users = useQuery(api.auth.listUsers)
-  const currentUser = users?.[0]
   const createPage = useMutation(api.pages.create)
   const createTask = useMutation(api.tasks.create)
 
@@ -63,7 +61,7 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
         setTheme(theme === "dark" ? "light" : "dark")
       } else if (value === "new-page") {
         const firstSpace = spaces?.[0]
-        if (!firstSpace || !currentUser) {
+        if (!firstSpace) {
           toast.error("Create a space first")
           return
         }
@@ -83,7 +81,7 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
         router.push(`/${spaceId}`)
       }
     },
-    [onClose, router, searchResults, theme, setTheme, spaces, currentUser, createPage, createTask]
+    [onClose, router, searchResults, theme, setTheme, spaces, createPage, createTask]
   )
 
   if (!isOpen) return null

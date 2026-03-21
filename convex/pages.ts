@@ -96,10 +96,11 @@ export const update = mutation({
     pageId: v.id("pages"),
     title: v.optional(v.string()),
     content: v.optional(v.string()),
-    icon: v.optional(v.string()),
+    // null = clear the field, undefined = leave unchanged
+    icon: v.optional(v.union(v.string(), v.null())),
     isFavorite: v.optional(v.boolean()),
     isPublic: v.optional(v.boolean()),
-    coverImage: v.optional(v.string()),
+    coverImage: v.optional(v.union(v.string(), v.null())),
     order: v.optional(v.number()),
     shareToken: v.optional(v.string()),
   },
@@ -108,7 +109,10 @@ export const update = mutation({
     const filtered: Record<string, unknown> = {};
 
     for (const [key, val] of Object.entries(updates)) {
-      if (val !== undefined) {
+      if (val === null) {
+        // null means explicitly unset the optional field
+        filtered[key] = undefined;
+      } else if (val !== undefined) {
         filtered[key] = val;
       }
     }

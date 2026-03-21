@@ -1,4 +1,5 @@
 import { internalQuery, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
 // Internal query: get the INVITE_KEY setting value
 export const getInviteKeyInternal = internalQuery({
@@ -37,5 +38,15 @@ export const listUsers = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("user").collect();
+  },
+});
+
+// Get the currently authenticated user from their session token
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    return await ctx.db.get(identity.subject as Id<"user">);
   },
 });

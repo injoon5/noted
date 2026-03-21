@@ -23,9 +23,11 @@ export const create = mutation({
   args: {
     title: v.string(),
     icon: v.optional(v.string()),
-    ownerId: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
     const existing = await ctx.db.query("spaces").collect();
     const maxOrder = existing.reduce((max, s) => Math.max(max, s.order), -1);
 
@@ -33,7 +35,7 @@ export const create = mutation({
       title: args.title,
       icon: args.icon,
       order: maxOrder + 1,
-      ownerId: args.ownerId,
+      ownerId: identity.subject,
       isPublic: false,
     });
   },

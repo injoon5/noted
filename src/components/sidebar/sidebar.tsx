@@ -54,6 +54,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
   const createSpace = useMutation(api.spaces.create)
   const reorderSpaces = useMutation(api.spaces.reorder)
 
+
   const [dragOrder, setDragOrder] = useState<string[] | null>(null)
 
   const spacesList = spaces ?? []
@@ -84,18 +85,9 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
     }
   }
 
-  // We need a user ID to create spaces. Use a placeholder for now.
-  // In a real app, this would come from a session context.
-  const users = useQuery(api.auth.listUsers)
-  const currentUser = users?.[0]
-
   const handleCreateSpace = async () => {
-    if (!currentUser) return
     try {
-      await createSpace({
-        title: "New Space",
-        ownerId: currentUser._id,
-      })
+      await createSpace({ title: "New Space" })
       toast.success("Space created")
     } catch {
       toast.error("Failed to create space")

@@ -1,9 +1,15 @@
 import { mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
-// Get overall stats
+// Get overall stats (admin only)
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const user = await ctx.db.get(identity.subject as Id<"user">);
+    if (user?.role !== "admin") return null;
+
     const [spaces, pages, tasks, files, users] = await Promise.all([
       ctx.db.query("spaces").collect(),
       ctx.db.query("pages").collect(),
@@ -26,10 +32,15 @@ export const getStats = query({
   },
 });
 
-// Get recent activity
+// Get recent activity (admin only)
 export const getRecentActivity = query({
   args: {},
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const user = await ctx.db.get(identity.subject as Id<"user">);
+    if (user?.role !== "admin") return null;
+
     const [recentPages, recentTasks, recentFiles] = await Promise.all([
       ctx.db.query("pages").order("desc").take(7),
       ctx.db.query("tasks").order("desc").take(7),
@@ -68,19 +79,18 @@ export const getRecentActivity = query({
   },
 });
 
-// Regenerate invite key — generates key internally, no args needed
+// Regenerate invite key — admin only, cryptographically random
 export const regenerateInviteKey = mutation({
   args: {},
   handler: async (ctx) => {
-    // Generate a 21-char hex token using crypto
-    const bytes = new Uint8Array(16);
-    // Convex mutations run in a JS environment with crypto available
-    const randomValues = Array.from({ length: 16 }, () =>
-      Math.floor(Math.random() * 256)
-    );
-    for (let i = 0; i < 16; i++) bytes[i] = randomValues[i];
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const user = await ctx.db.get(identity.subject as Id<"user">);
+    if (user?.role !== "admin") throw new Error("Forbidden: admin only");
 
-    const newKey = randomValues
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const newKey = Array.from(bytes)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("")
       .slice(0, 21);
@@ -104,7 +114,6 @@ export const regenerateInviteKey = mutation({
 export const exportData = mutation({
   args: {},
   handler: async (_ctx) => {
-    // Placeholder — would generate ZIP with all pages as .md files
     return null;
   },
 });
