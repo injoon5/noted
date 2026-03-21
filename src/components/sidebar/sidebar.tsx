@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import { Doc } from "@/convex/_generated/dataModel"
 import { useTheme } from "next-themes"
 import {
   Search,
@@ -57,7 +58,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
 
   const [dragOrder, setDragOrder] = useState<string[] | null>(null)
 
-  const spacesList = spaces ?? []
+  const spacesList = (spaces ?? []) as Doc<"spaces">[]
   const localSpaces = dragOrder
     ? dragOrder.flatMap((id) => spacesList.filter((s) => s._id === id))
     : spacesList
@@ -150,7 +151,7 @@ export function Sidebar({ onSearchOpen }: SidebarProps) {
               <div className="mb-1 px-2.5 text-xs font-medium text-muted-foreground/70">
                 Favorites
               </div>
-              {favorites.map((page) => (
+              {(favorites as Doc<"pages">[]).map((page) => (
                 <NavItem
                   key={page._id}
                   href={`/${page.spaceId}/${page._id}`}

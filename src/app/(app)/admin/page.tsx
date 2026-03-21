@@ -71,7 +71,7 @@ export default function AdminPage() {
           Recent Activity
         </h2>
         <div className="space-y-2">
-          {recentActivity?.map((item, i) => (
+          {(recentActivity as Array<{ icon: string; description: string; timestamp: number }> | null | undefined)?.map((item, i) => (
             <div key={`${item.timestamp}-${i}`} className="flex items-center justify-between rounded-lg border bg-card px-4 py-3">
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground">{item.icon}</span>

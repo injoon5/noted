@@ -159,7 +159,7 @@ export const search = query({
     // Search by title
     const titleResults = await ctx.db
       .query("pages")
-      .searchIndex("search_title", (q) => q.search("title", args.query))
+      .withSearchIndex("search_title", (q) => q.search("title", args.query))
       .take(20);
 
     // If spaceId provided, also search content
@@ -167,7 +167,7 @@ export const search = query({
     if (args.spaceId) {
       contentResults = await ctx.db
         .query("pages")
-        .searchIndex("search_content", (q) =>
+        .withSearchIndex("search_content", (q) =>
           q.search("content", args.query).eq("spaceId", args.spaceId!)
         )
         .take(10);

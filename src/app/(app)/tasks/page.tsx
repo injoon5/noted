@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import { Doc } from "@/convex/_generated/dataModel"
 import { TaskList } from "@/components/tasks/task-list"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CheckSquare, Plus } from "lucide-react"
@@ -33,8 +34,9 @@ export default function TasksPage() {
   const isLoading = todayTasks === undefined || upcomingTasks === undefined
 
   // Get tasks without due date
-  const noDueDateTasks = allTasks?.filter((t) => !t.dueDate && t.status !== "done") ?? []
-  const completedTasks = allTasks?.filter((t) => t.status === "done") ?? []
+  const allTasksTyped = allTasks as Doc<"tasks">[] | undefined
+  const noDueDateTasks = allTasksTyped?.filter((t) => !t.dueDate && t.status !== "done") ?? []
+  const completedTasks = allTasksTyped?.filter((t) => t.status === "done") ?? []
 
   return (
     <div className="mx-auto max-w-2xl px-8 py-10">

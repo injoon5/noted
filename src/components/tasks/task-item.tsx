@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import { Trash2, ChevronDown, ChevronRight, Calendar, Link2 } from "lucide-react"
 import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
@@ -250,7 +250,7 @@ export function TaskItem({ task }: TaskItemProps) {
                   className="w-full rounded border px-2 py-1.5 text-sm outline-none bg-background"
                 />
                 <div className="mt-2 max-h-48 overflow-y-auto space-y-0.5">
-                  {pageResults?.map((page) => (
+                  {(pageResults as Doc<"pages">[] | undefined)?.map((page) => (
                     <button
                       key={page._id}
                       onClick={() => handleLinkPage(page._id)}

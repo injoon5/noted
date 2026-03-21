@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import { Doc } from "@/convex/_generated/dataModel"
 import { Command } from "cmdk"
 import {
   Search,
@@ -49,7 +50,7 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
       if (value.startsWith("page:")) {
         const pageId = value.replace("page:", "")
         // Find the page to get spaceId
-        const page = searchResults?.find((p) => p._id === pageId)
+        const page = (searchResults as Doc<"pages">[] | undefined)?.find((p) => p._id === pageId)
         if (page) {
           router.push(`/${page.spaceId}/${page._id}`)
         }
@@ -123,7 +124,7 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
             {/* Search results */}
             {search.length > 1 && searchResults && searchResults.length > 0 && (
               <Command.Group heading="Pages">
-                {searchResults.map((page) => (
+                {(searchResults as Doc<"pages">[]).map((page) => (
                   <Command.Item
                     key={page._id}
                     value={`page:${page._id}`}
@@ -148,7 +149,7 @@ export function CmdPalette({ isOpen, onClose }: CmdPaletteProps) {
             {/* Spaces */}
             {!search && spaces && spaces.length > 0 && (
               <Command.Group heading="Spaces">
-                {spaces.map((space) => (
+                {(spaces as Doc<"spaces">[]).map((space) => (
                   <Command.Item
                     key={space._id}
                     value={`space:${space._id}`}

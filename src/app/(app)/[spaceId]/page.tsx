@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import { use } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Plus, FileText } from "lucide-react"
@@ -100,7 +100,7 @@ export default function SpacePage({ params }: SpacePageProps) {
         </div>
       ) : (
         <div className="space-y-2">
-          {pages.map((page) => (
+          {(pages as Doc<"pages">[]).map((page) => (
             <Link
               key={page._id}
               href={`/${spaceId}/${page._id}`}

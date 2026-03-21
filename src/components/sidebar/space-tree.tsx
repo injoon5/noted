@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
+import { Doc, Id } from "@/convex/_generated/dataModel"
 import {
   DndContext,
   closestCenter,
@@ -35,7 +35,7 @@ function PageTree({ spaceId, parentId, depth = 1 }: PageTreeProps) {
   const [dragOrder, setDragOrder] = useState<string[] | null>(null)
   const reorderPages = useMutation(api.pages.reorder)
 
-  const pages = pagesQuery ?? []
+  const pages = (pagesQuery ?? []) as Doc<"pages">[]
   const displayPages = dragOrder
     ? dragOrder.flatMap((id) => pages.filter((p) => p._id === id))
     : pages
