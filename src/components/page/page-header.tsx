@@ -1,14 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ImageIcon, X } from "lucide-react"
+import { ImageIcon, Upload, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatRelativeTime } from "@/lib/utils"
 import { Popover, PopoverContent } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useUploadFile } from "@convex-dev/r2/react"
+import { api } from "@/convex/_generated/api"
+import { useMutation, useQuery } from "convex/react"
+import { toast } from "sonner"
 
 interface ParentPage {
   _id: string
@@ -82,14 +86,74 @@ function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
 interface CoverPickerProps {
   onSelect: (url: string) => void
   onClose: () => void
+  linkedPageId?: string
 }
 
-function CoverPicker({ onSelect, onClose }: CoverPickerProps) {
+function CoverPicker({ onSelect, onClose, linkedPageId }: CoverPickerProps) {
   const [url, setUrl] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const uploadFile = useUploadFile(api.r2)
+  const saveFile = useMutation(api.files.saveFile)
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const key = await uploadFile(file)
+      // Save metadata to files table
+      await saveFile({
+        r2Key: key,
+        name: file.name,
+        size: file.size,
+        mimeType: file.type,
+        linkedPageId: linkedPageId as Parameters<typeof saveFile>[0]["linkedPageId"],
+      })
+      // Build a URL — use the R2 public URL pattern or query for it
+      // We pass the key as a URL identifier; the cover will be displayed via r2.getUrl
+      // For simplicity we use the key prefixed with a marker so the page can resolve it
+      onSelect(`r2:${key}`)
+      onClose()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed")
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <Popover open onOpenChange={(open) => !open && onClose()}>
       <PopoverContent className="p-3 w-80" align="start">
-        <p className="text-xs font-medium mb-2">Cover image URL</p>
+        <p className="text-xs font-medium mb-2">Cover image</p>
+
+        {/* File upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleFileUpload(file)
+          }}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full mb-2"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="h-3.5 w-3.5 mr-1.5" />
+          {uploading ? "Uploading..." : "Upload image"}
+        </Button>
+
+        <div className="flex items-center gap-2 my-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        {/* URL input */}
         <div className="flex gap-2">
           <Input
             value={url}
@@ -134,6 +198,14 @@ export function PageHeader({
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
 
+  // Resolve R2 keys stored as "r2:<key>" into signed URLs
+  const r2Key = page.coverImage?.startsWith("r2:") ? page.coverImage.slice(3) : null
+  const r2Url = useQuery(
+    api.files.getUrl,
+    r2Key ? { r2Key } : "skip"
+  )
+  const coverSrc = r2Key ? (r2Url ?? null) : (page.coverImage ?? null)
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({ title: e.target.value })
   }
@@ -153,10 +225,10 @@ export function PageHeader({
   return (
     <div className="w-full">
       {/* Cover image */}
-      {page.coverImage ? (
+      {coverSrc ? (
         <div className="relative group mb-6 -mx-8 h-32 overflow-hidden">
           <Image
-            src={page.coverImage}
+            src={coverSrc}
             alt="Cover"
             fill
             sizes="100vw"
@@ -208,6 +280,7 @@ export function PageHeader({
           <CoverPicker
             onSelect={handleCoverSelect}
             onClose={() => setShowCoverPicker(false)}
+            linkedPageId={page._id}
           />
         </div>
       )}
